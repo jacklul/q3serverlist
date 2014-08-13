@@ -4,7 +4,6 @@ Simple command-line script to fetch all servers from a Quake 3 based master serv
 
 ## Requirements:
 * php-cli
-* [GameQ](http://gameq.sourceforge.net)
 
 ## Usage:
 ```
@@ -18,7 +17,7 @@ will get data from all servers that are present in DB file and write it to list 
 ```
 $ php q3serverlist.php cleanup
 ```
-will clean DB from all offline servers
+will clean DB from all offline servers or those not meeting filtering criteria
 
 _My advice is to set up crontab rules for this script, usually executing getservers every 5 minutes, refreshlist every 1 minute and cleanup once a week is sufficient._
 
