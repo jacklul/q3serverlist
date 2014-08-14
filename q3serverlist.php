@@ -46,7 +46,7 @@ $external_config = "";
 ############################################### FUNCTIONS ###############################################
 
 function GetServers($master_server, $port, $protocol, $keywords = "empty full", $timeout = 1) {
-	if($socket = fsockopen('udp://'.$master_server, $port))
+	if($master_server != "" && $port != 0 && $protocol != 0 && $socket = fsockopen('udp://'.$master_server, $port))
 	{
 		stream_set_blocking($socket, 0);
 		stream_set_timeout($socket, $timeout);
@@ -74,13 +74,11 @@ function GetServers($master_server, $port, $protocol, $keywords = "empty full", 
 		return false;
 }
 
-function GetServerInfo($ip, $port)
+function GetServerInfo($ip, $port, $timeout = 1)
 {
-	if($port != 0)
+	if($port != 0 && $ip != 0 && $socket = fsockopen('udp://'.$ip, $port))
 	{
-		$socket = fsockopen('udp://'.$ip, $port);
-
-		socket_set_timeout ($socket, 1);
+		socket_set_timeout ($socket, $timeout);
 		fwrite ($socket, "\xFF\xFF\xFF\xFF\x02getstatus\x0a\x00");
 		$data = fread ($socket, 10000);
 		fclose ($socket);
@@ -184,8 +182,6 @@ if(!defined("STDIN"))
 if(sizeof($argv) > 2)
 	die("Please specify only one parameter!\n");
 
-$fullpath = dirname(__FILE__);
-
 if($external_config != "" && file_exists($external_config))
 	require_once($external_config);
 elseif($external_config != "")
@@ -260,19 +256,15 @@ if(isset($argv[1]) && $argv[1] == "getservers") {
 }
 elseif(isset($argv[1]) && $argv[1] == "refreshlist") {
 	if(file_exists($dbfile) && filesize($dbfile) > 0) {
-		$servers = file_get_contents($dbfile);
+		$servers = explode(";", file_get_contents($dbfile));
 		$serversarray = Array();
-		$servers = explode(";", $servers);
 
 		for($i=0; $i < sizeof($servers); $i++) {
 			$server = explode(":", $servers[$i]);
+			$ip = isset($server[0]) ? $server[0] : NULL;
+			$port = isset($server[1]) ? $server[1] : NULL;
 			
-			if(isset($server[0]))
-				$ip = $server[0];
-			if(isset($server[1]))
-				$port = $server[1];
-			
-			if($ip == "" || $ip == "0.0.0.0" || $port == "" || $port == "0")
+			if($ip == "" || $ip == "0.0.0.0" || $ip == "0" || $port == "" || $port == "0")
 				continue;
 
 			array_push($serversarray, array($ip, $port));
@@ -287,8 +279,7 @@ elseif(isset($argv[1]) && $argv[1] == "refreshlist") {
 		{
 			$data = GetServerInfo($serversarray[$i][0], $serversarray[$i][1]);
 			$server = ScanServer($data);
-		
-			if($server != "") {
+			if($server) {
 				$servers .= $server;
 				$serverscount++;
 			}
@@ -306,8 +297,8 @@ elseif(isset($argv[1]) && $argv[1] == "refreshlist") {
 elseif(isset($argv[1]) && $argv[1] == "cleanup") {
 	if(file_exists($dbfile) && filesize($dbfile) > 0) {
 		$serverslist = file_get_contents($dbfile);
-		$serversarray = Array();
 		$servers = explode(";", $serverslist);
+		$serversarray = Array();
 
 		for($i=0; $i<sizeof($servers); $i++) {
 			$server = explode(":", $servers[$i]);
