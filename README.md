@@ -2,10 +2,10 @@
 
 Simple command-line script to fetch all servers from a Quake 3 based master server and then save it to a file for easier parsing. [Example](http://my.jacklul.com/mb2servers) of how it can be used. :)
 
-## Requirements:
+## Requirements
 * php-cli
 
-## Usage:
+## Usage
 ```
 $ php q3serverlist.php getservers
 ```
@@ -21,7 +21,7 @@ will clean DB from all offline servers or those not meeting filtering criteria
 
 _My advice is to set up crontab rules for this script, usually executing getservers every 5 minutes, refreshlist every 1 minute and cleanup once a week is sufficient._
 
-## Master Server Compatibility:
+## Master Server Compatibility
 * Quake 3 Arena
 * Enemy Territory
 * Jedi Knight 2
