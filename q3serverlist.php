@@ -82,7 +82,7 @@ function GetServerInfo($ip, $port, $timeout = 1)
 		fwrite ($socket, "\xFF\xFF\xFF\xFF\x02getstatus\x0a\x00");
 		$data = fread ($socket, 10000);
 		fclose ($socket);
-
+		
 		if($data)
 		{
 			$ret = NULL;
@@ -98,22 +98,43 @@ function GetServerInfo($ip, $port, $timeout = 1)
 			$list['port'] = $port;
 
 			$players = array();
-			foreach($vars as $id => $player) {
-				if($id != 0 AND $id != 1) {
-					$infos = explode(' ', $player, 3);
-					if(isset($infos[1]) && isset($infos[2])) {
+								
+			for($i = 2; $i < sizeof($vars); $i++)
+			{
+				$infos = explode(' ', $vars[$i], 3);
+				
+				if(isset($infos[2]))
+				{
 					$name = explode('"', $infos[2]); 
-					$players[] = array('score' => $infos[0], 'ping' => $infos[1], 'name' => $name[1]);
-					}
+					
+					if(isset($name[1]))
+						$name = $name[1];
+					else
+						$name = "";
 				}
+				else
+					$name = "";
+					
+				if(isset($infos[0]))
+					$score = $infos[0];
+				else
+					$score = 0;
+				
+				if(isset($infos[1]))
+					$ping = $infos[1];
+				else
+					$ping = 999;
+				
+				array_push($players, array('score' => $score, 'ping' => $ping, 'name' => $name));
 			}
+			
 			array_pop($players);
 			
 			if(isset($players[0]['ping']))
-				$list['numplayers'] = sizeof($players)+1;
+				$list['numplayers'] = sizeof($players);
 			else
 				$list['numplayers'] = 0;
-			
+
 			$infos = array();
 			$infos = $list;
 			$infos['players'] = $players;
@@ -134,10 +155,10 @@ function CheckServer($data) {
 	if(!isset($data['sv_hostname']))
 		return false;
 	
-    if ($filter_game != "" && isset($data['game']) && strtolower($data['game']) != strtolower($filter_game))
+    if ($filter_game != "" && !isset($data['game']) || (isset($data['game']) && strtolower($data['game']) != strtolower($filter_game)))
 		return false;
 		
-    if ($filter_gamename != "" && isset($data['gamename']) && !preg_match("/".strtolower($filter_gamename)."/", strtolower($data['gamename'])))
+    if ($filter_gamename != "" && !isset($data['gamename']) || (isset($data['gamename']) && !preg_match("/".strtolower($filter_gamename)."/", strtolower($data['gamename']))))
 		return false;
 			
 	return true;
@@ -279,6 +300,9 @@ elseif(isset($argv[1]) && $argv[1] == "refreshlist") {
 		{
 			$data = GetServerInfo($serversarray[$i][0], $serversarray[$i][1]);
 			$server = ScanServer($data);
+			
+			fwrite(STDOUT, $server."\n");
+			
 			if($server) {
 				$servers .= $server;
 				$serverscount++;
