@@ -40,6 +40,9 @@ $filter_gamename = "";
 # Custom variables you wish to be also added for each server in server list file, useful when you want show more info on the server list
 $custom_vars = Array("g_gametype");
 
+# This is to secure access to the script when running on webspace, if not set everyone can execute this script
+$secret = "";
+
 # If you wish to use external config file specify it here, it will overwrite settings set in this file
 $external_config = "";
 
@@ -195,13 +198,21 @@ function ScanServer($data) {
 	return "$address\t$hostname\t$currentmap\t$playersonline\t$maxplayers\t$password\t$customvars\t\n";
 }
 
+function printout($message)
+{
+	if(!defined("STDIN"))
+		print(str_replace("\n", "<br>\n", $message));
+	else
+		fwrite(STDOUT, $message);
+}
+
 ############################################ FUN BEGINS HERE ############################################
 
-if(!defined("STDIN"))
-	die("This script cannot be run from the browser!\n");
-
-if(sizeof($argv) > 2)
+if(defined("STDIN") && sizeof($argv) > 2)
 	die("Please specify only one parameter!\n");
+	
+if(!defined("STDIN") && isset($_GET['action']) && $_GET['secret'] == $secret && isset($_GET['action']))
+	$argv[1] = $_GET['action'];
 
 if($external_config != "" && file_exists($external_config))
 	require_once($external_config);
@@ -209,7 +220,7 @@ elseif($external_config != "")
 	die("Couldn't load config file: '$external_config'!\n");
 
 if(isset($argv[1]) && $argv[1] == "getservers") {
-	fwrite(STDOUT, "Fetching server list from $masterserver_address:$masterserver_port...");
+	printout("Fetching server list from $masterserver_address:$masterserver_port...");
 	$fetch = GetServers($masterserver_address, $masterserver_port, $masterserver_protocol);
 	
 	if($fetch)
@@ -223,7 +234,7 @@ if(isset($argv[1]) && $argv[1] == "getservers") {
 				$servers .= $ip.":".$port.";";
 			}
 		}
-		fwrite(STDOUT, " done\n");
+		printout(" done\n");
 		
 		$serversarray = Array();
 		$servers = explode(";", $servers);
@@ -249,7 +260,7 @@ if(isset($argv[1]) && $argv[1] == "getservers") {
 
 		$serverscount = 0;
 		
-		fwrite(STDOUT, "Scanning ".($i-1)." servers");
+		printout("Scanning ".($i-1)." servers");
 		for($i = 0; $i < sizeof($serversarray); $i++)
 		{
 			$data = GetServerInfo($serversarray[$i][0], $serversarray[$i][1]);
@@ -260,20 +271,20 @@ if(isset($argv[1]) && $argv[1] == "getservers") {
 					$serverscount++;
 				}
 			}
-			fwrite(STDOUT, ".");
+			printout(".");
 		}
-		fwrite(STDOUT, " done\n");
+		printout(" done\n");
 		
 		if($servers != "")
 			file_put_contents($dbfile, $servers);
 		
 		if($serverscount>0)
-			fwrite(STDOUT, "Found $serverscount new server(s).\n");
+			printout("Found $serverscount new server(s).\n");
 		else
-			fwrite(STDOUT, "No new servers found.\n");
+			printout("No new servers found.\n");
 	}
 	else 
-		fwrite(STDOUT, " no reply received!\n");
+		printout(" no reply received!\n");
 }
 elseif(isset($argv[1]) && $argv[1] == "refreshlist") {
 	if(file_exists($dbfile) && filesize($dbfile) > 0) {
@@ -295,28 +306,26 @@ elseif(isset($argv[1]) && $argv[1] == "refreshlist") {
 		$serverscount = 0;
 		$playersonline = 0;
 		
-		fwrite(STDOUT, "Scanning ".($i-1)." servers");
+		printout("Scanning ".($i-1)." servers");
 		for($i = 0; $i < sizeof($serversarray); $i++)
 		{
 			$data = GetServerInfo($serversarray[$i][0], $serversarray[$i][1]);
 			$server = ScanServer($data);
 			
-			fwrite(STDOUT, $server."\n");
-			
 			if($server) {
 				$servers .= $server;
 				$serverscount++;
 			}
-			fwrite(STDOUT, ".");
+			printout(".");
 		}
-		fwrite(STDOUT, " done\n");
+		printout(" done\n");
 		
 		file_put_contents($listfile, $servers);
 		
-		fwrite(STDOUT, "Refreshed $serverscount server(s).\n");
+		printout("Refreshed $serverscount server(s).\n");
 	}
 	else
-		fwrite(STDOUT, "ServersDB is empty!\n");
+		printout("ServersDB is empty!\n");
 }
 elseif(isset($argv[1]) && $argv[1] == "cleanup") {
 	if(file_exists($dbfile) && filesize($dbfile) > 0) {
@@ -341,7 +350,7 @@ elseif(isset($argv[1]) && $argv[1] == "cleanup") {
 		$servers = NULL;
 		$numremoved = 0;
 		
-		fwrite(STDOUT, "Scanning ".($i-1)." servers");
+		printout("Scanning ".($i-1)." servers");
 		for($i = 0; $i < sizeof($serversarray); $i++)
 		{
 			$data = GetServerInfo($serversarray[$i][0], $serversarray[$i][1]);
@@ -351,24 +360,24 @@ elseif(isset($argv[1]) && $argv[1] == "cleanup") {
 				$serverslist = str_replace("$thisserver;", "", $serverslist);
 				$numremoved++;
 			}
-			fwrite(STDOUT, ".");
+			printout(".");
 		}
-		fwrite(STDOUT, " done\n");
+		printout(" done\n");
 		
 		
 		if($serverslist != "" && $numremoved > 0) {	
 			file_put_contents($dbfile, $serverslist);
-			fwrite(STDOUT, "Removed $numremoved server(s).\n");
+			printout("Removed $numremoved server(s).\n");
 		}
 		else
-			fwrite(STDOUT, "Nothing to remove.\n");
+			printout("Nothing to remove.\n");
 	}
 	else
-		fwrite(STDOUT, "ServersDB is empty!\n");
+		printout("ServersDB is empty!\n");
 }
-elseif(isset($argv[1]) && $argv[1] == "help")
-	fwrite(STDOUT, "Usage: php ".basename(__FILE__)." [ACTION]\n\nAvailable actions:\n getservers - Get servers from Master Server\n refreshlist - Refresh all servers stored in DB file\n cleanup - Remove offline servers from DB file\n help - This, derp.\n\n");
-else
-	fwrite(STDOUT, "No action specified, try 'php ".basename(__FILE__)." help' for list of available actions!\n");
+elseif(isset($argv[1]) && $argv[1] == "help" && defined("STDIN"))
+	printout("Usage: php ".basename(__FILE__)." [ACTION]\n\nAvailable actions:\n getservers - Get servers from Master Server\n refreshlist - Refresh all servers stored in DB file\n cleanup - Remove offline servers from DB file\n help - This, derp.\n\n");
+elseif(defined("STDIN"))
+	printout("No action specified, try 'php ".basename(__FILE__)." help' for list of available actions!\n");
 
 ?>
