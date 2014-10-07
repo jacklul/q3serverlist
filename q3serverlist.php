@@ -208,16 +208,16 @@ function printout($message)
 
 ############################################ FUN BEGINS HERE ############################################
 
+if($external_config != "" && file_exists($external_config))
+	require_once($external_config);
+elseif($external_config != "")
+	die("Couldn't load config file: '$external_config'!\n");
+
 if(defined("STDIN") && sizeof($argv) > 2)
 	die("Please specify only one parameter!\n");
 	
 if(!defined("STDIN") && isset($_GET['action']) && $_GET['secret'] == $secret && isset($_GET['action']))
 	$argv[1] = $_GET['action'];
-
-if($external_config != "" && file_exists($external_config))
-	require_once($external_config);
-elseif($external_config != "")
-	die("Couldn't load config file: '$external_config'!\n");
 
 if(isset($argv[1]) && $argv[1] == "getservers") {
 	printout("Fetching server list from $masterserver_address:$masterserver_port...");
