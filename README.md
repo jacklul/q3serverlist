@@ -1,6 +1,6 @@
 # Quake 3 Server List Script #
 
-Simple command-line script to fetch all servers from a Quake 3 based master server and then save it to a file for easier parsing. [Example](http://my.jacklul.com/mb2servers) of how it can be used. :)
+Simple script to fetch all servers from a Quake 3 based master server and then save it to a file for easier parsing. [Example](http://my.jacklul.com/mb2servers) of how it can be used. :)
 
 ## Requirements
 * php-cli _OR_ decent web hosting
