@@ -63,7 +63,7 @@ function GetServers($master_server, $port, $protocol, $keywords = "empty full", 
 		}
 		
 		$servers = Array();
-		for($i = 0; $i < strlen($returned)-11; $i++) {
+		for($i = 0; $i < strlen($returned)-10; $i++) {
 			if($returned[$i] == "\\" && $returned[$i+7] == "\\") {
 				$ip = ord($returned[$i+1]).".".ord($returned[$i+2]).".".ord($returned[$i+3]).".".ord($returned[$i+4]);
 				$port = (ord($returned[$i+5])<<8) + ord($returned[$i+6]);
