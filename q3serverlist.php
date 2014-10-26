@@ -158,19 +158,27 @@ function CheckServer($data) {
 	if(!isset($data['sv_hostname']))
 		return false;
 	
-    if ($filter_game != "" && !isset($data['game']) || (isset($data['game']) && strtolower($data['game']) != strtolower($filter_game)))
+    if ($filter_game != "" && (!isset($data['game']) || (isset($data['game']) && strtolower($data['game']) != strtolower($filter_game))))
 		return false;
 		
-    if ($filter_gamename != "" && !isset($data['gamename']) || (isset($data['gamename']) && !preg_match("/".strtolower($filter_gamename)."/", strtolower($data['gamename']))))
+    if ($filter_gamename != "" && (!isset($data['gamename']) || (isset($data['gamename']) && !preg_match("/".strtolower($filter_gamename)."/", strtolower($data['gamename'])))))
 		return false;
 			
 	return true;
 }
 
 function ScanServer($data) {
+	global $filter_game;
+	global $filter_gamename;
 	global $custom_vars;
 	
 	if(!isset($data['sv_hostname']))
+		return false;
+		
+    if ($filter_game != "" && (!isset($data['game']) || (isset($data['game']) && strtolower($data['game']) != strtolower($filter_game))))
+		return false;
+		
+    if ($filter_gamename != "" && (!isset($data['gamename']) || (isset($data['gamename']) && !preg_match("/".strtolower($filter_gamename)."/", strtolower($data['gamename'])))))
 		return false;
 		
 	$address = $data['address'].":".$data['port'];
