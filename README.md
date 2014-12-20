@@ -46,6 +46,19 @@ Webspace:
 
 -----------------
 
+Passing external config file in arguments:
+
+CLI:
+```
+$ php q3serverlist.php somedir/config2.php getservers
+```
+Webspace:
+```
+/q3serverlist.php?config=somedir/config2.php&action=getservers
+```
+
+-----------------
+
 Additionally to secure access to the script on webspace set *$secret* variable to anything that only you will know, then pass it in GET like this:
 ```
 /q3serverlist.php?secret=mysecret&action=refreshlist
