@@ -316,11 +316,11 @@ if(isset($argv[1]) && $argv[1] == "getservers") {
 		
 		file_put_contents($statefile, "online");
 		
-		if($servers != "")
+		if($servers != "" && $serverscount>0)
+		{
 			file_put_contents($dbfile, $servers);
-		
-		if($serverscount>0)
 			printout("Found $serverscount new server(s).\n");
+		}
 		else
 			printout("No new servers found.\n");
 	}
