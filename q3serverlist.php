@@ -28,6 +28,9 @@ $dbfile = "serversdb";
 # File used to store server list
 $listfile = "serverlist";
 
+# File to output master server state (online / offline)
+$statefile = "masterserverstate";
+
 # Master Server connection data
 $masterserver_address = "monster.idsoftware.com";
 $masterserver_port = 27950;
@@ -216,16 +219,44 @@ function printout($message)
 
 ############################################ FUN BEGINS HERE ############################################
 
-if($external_config != "" && file_exists($external_config))
-	require_once($external_config);
-elseif($external_config != "")
-	die("Couldn't load config file: '$external_config'!\n");
+if(defined("STDIN") && sizeof($argv) > 3)
+	die("Too many parameters!\n");
 
-if(defined("STDIN") && sizeof($argv) > 2)
-	die("Please specify only one parameter!\n");
-	
-if(!defined("STDIN") && isset($_GET['action']) && $_GET['secret'] == $secret && isset($_GET['action']))
-	$argv[1] = $_GET['action'];
+if($external_config != "")
+{
+	if(file_exists($external_config))
+		require_once($external_config);
+	else
+		die("Couldn't load config file: '$external_config'!\n");
+}
+
+if(defined("STDIN"))
+{
+	if(isset($argv[2]))
+	{
+		if(file_exists($argv[1]))
+		{
+			require_once($argv[1]);
+			$argv[1] = $argv[2];
+		}
+		else
+			die("Couldn't load config file: '$argv[1]'!\n");
+	}
+}
+
+if(!defined("STDIN"))
+{
+	if(isset($_GET['config']) && $_GET['secret'] == $secret)
+	{
+		if(file_exists($_GET['config']))
+			require_once($_GET['config']);
+		else
+			die("Couldn't load config file: '".$_GET['config']."'!\n");
+	}
+		
+	if(isset($_GET['action']) && $_GET['secret'] == $secret)
+		$argv[1] = $_GET['action'];
+}
 
 if(isset($argv[1]) && $argv[1] == "getservers") {
 	printout("Fetching server list from $masterserver_address:$masterserver_port...");
@@ -283,6 +314,8 @@ if(isset($argv[1]) && $argv[1] == "getservers") {
 		}
 		printout(" done\n");
 		
+		file_put_contents($statefile, "online");
+		
 		if($servers != "")
 			file_put_contents($dbfile, $servers);
 		
@@ -292,7 +325,12 @@ if(isset($argv[1]) && $argv[1] == "getservers") {
 			printout("No new servers found.\n");
 	}
 	else 
+	{
+		if(file_exists($statefile) && file_get_contents($statefile) != "offline")
+			file_put_contents($statefile, "offline");
+
 		printout(" no reply received!\n");
+	}
 }
 elseif(isset($argv[1]) && $argv[1] == "refreshlist") {
 	if(file_exists($dbfile) && filesize($dbfile) > 0) {
@@ -384,7 +422,7 @@ elseif(isset($argv[1]) && $argv[1] == "cleanup") {
 		printout("ServersDB is empty!\n");
 }
 elseif(isset($argv[1]) && $argv[1] == "help" && defined("STDIN"))
-	printout("Usage: php ".basename(__FILE__)." [ACTION]\n\nAvailable actions:\n getservers - Get servers from Master Server\n refreshlist - Refresh all servers stored in DB file\n cleanup - Remove offline servers from DB file\n help - This, derp.\n\n");
+	printout("Usage: php ".basename(__FILE__)." [Optional: CONFIG FILE] [ACTION]\n\nAvailable actions:\n getservers - Get servers from Master Server\n refreshlist - Refresh all servers stored in DB file\n cleanup - Remove offline servers from DB file\n help - This, derp.\n\n");
 elseif(defined("STDIN"))
 	printout("No action specified, try 'php ".basename(__FILE__)." help' for list of available actions!\n");
 
