@@ -314,7 +314,8 @@ if(isset($argv[1]) && $argv[1] == "getservers") {
 		}
 		printout(" done\n");
 		
-		file_put_contents($statefile, "online");
+		if($statefile != "")
+			file_put_contents($statefile, "online");
 		
 		if($servers != "" && $serverscount>0)
 		{
