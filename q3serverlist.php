@@ -141,6 +141,11 @@ function GetServerInfo($ip, $port, $timeout = 1)
 			else
 				$list['numplayers'] = 0;
 
+			$list['numbots'] = 0;
+			for($i = 0; $i < sizeof($players); $i++)
+				if($players[$i]['ping'] == 0)
+					$list['numbots']++;
+				
 			$infos = array();
 			$infos = $list;
 			$infos['players'] = $players;
