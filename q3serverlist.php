@@ -36,8 +36,7 @@ $masterserver_address = "monster.idsoftware.com";
 $masterserver_port = 27950;
 $masterserver_protocol = 68;
 
-# Server filtering, set to desired values or leave empty to disable filtering
-$filter_game = "";
+# Server filtering based on 'gamename' value, leave empty to disable filtering
 $filter_gamename = "";
 
 # Custom variables you wish to be also added for each server in server list file, useful when you want show more info on the server list
@@ -160,35 +159,27 @@ function GetServerInfo($ip, $port, $timeout = 1)
 }
 
 function CheckServer($data) {
-	global $filter_game;
 	global $filter_gamename;
 	
 	if(!isset($data['sv_hostname']))
 		return false;
 	
-    if ($filter_game != "" && (!isset($data['game']) || (isset($data['game']) && strtolower($data['game']) != strtolower($filter_game))))
+    if ($filter_gamename != "" && (!isset($data['gamename']) || (isset($data['gamename']) && strtolower($filter_gamename) != strtolower($data['gamename']))))
 		return false;
-		
-    if ($filter_gamename != "" && (!isset($data['gamename']) || (isset($data['gamename']) && !preg_match("/".strtolower($filter_gamename)."/", strtolower($data['gamename'])))))
-		return false;
-			
+	
 	return true;
 }
 
 function ScanServer($data) {
-	global $filter_game;
 	global $filter_gamename;
 	global $custom_vars;
 	
 	if(!isset($data['sv_hostname']))
 		return false;
-		
-    if ($filter_game != "" && (!isset($data['game']) || (isset($data['game']) && strtolower($data['game']) != strtolower($filter_game))))
+	
+    if ($filter_gamename != "" && (!isset($data['gamename']) || (isset($data['gamename']) && strtolower($filter_gamename) != strtolower($data['gamename']))))
 		return false;
-		
-    if ($filter_gamename != "" && (!isset($data['gamename']) || (isset($data['gamename']) && !preg_match("/".strtolower($filter_gamename)."/", strtolower($data['gamename'])))))
-		return false;
-		
+	
 	$address = $data['address'].":".$data['port'];
 	$hostname = isset($data['sv_hostname']) ? $data['sv_hostname'] : NULL;
 	$currentmap = isset($data['mapname']) ? $data['mapname'] : NULL;
@@ -201,7 +192,7 @@ function ScanServer($data) {
 		$maxplayers = $data['sv_maxclients'];
 	else
 		$maxplayers = 0;
-
+	
 	$customvars = "";
 	if(sizeof($custom_vars) > 0) {
 		for($i = 0; $i < sizeof($custom_vars); $i++)
