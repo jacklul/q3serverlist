@@ -15,6 +15,12 @@ namespace jacklul\q3serverlist;
  */
 trait MagicGetterTrait
 {
+    /**
+     * @param $method
+     * @param $args
+     *
+     * @return mixed|null
+     */
     public function __call($method, $args)
     {
         $property = strtolower(ltrim(preg_replace('/[A-Z]/', '_$0', substr($method, 3)), '_'));

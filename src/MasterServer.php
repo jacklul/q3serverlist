@@ -42,9 +42,9 @@ class MasterServer
     private $servers = [];
 
     /**
-     * @param $address
-     * @param $port
-     * @param $protocol
+     * @param string $address
+     * @param int    $port
+     * @param int    $protocol
      */
     public function __construct($address, $port, $protocol)
     {

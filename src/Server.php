@@ -43,8 +43,8 @@ class Server
     private $status = [];
 
     /**
-     * @param $address
-     * @param $port
+     * @param string $address
+     * @param int    $port
      */
     public function __construct($address, $port)
     {
