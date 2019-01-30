@@ -1,0 +1,41 @@
+{
+  "name": "jacklul/q3serverlist",
+  "type": "library",
+  "description": "Simple library for querying Quake 3 based master servers and it's game servers",
+  "keywords": [
+    "quake",
+    "q3",
+    "master",
+    "server",
+    "game"
+  ],
+  "license": "MIT",
+  "support": {
+    "issues": "https://github.com/jacklul/q3serverlist/issues",
+    "source": "https://github.com/jacklul/q3serverlist"
+  },
+  "authors": [
+    {
+      "name": "Jack'lul",
+      "email": "jacklulcat@gmail.com",
+      "homepage": "https://jacklul.github.io",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "php": "^5.5|^7.0"
+  },
+  "require-dev": {
+    "squizlabs/php_codesniffer": "^3.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "jacklul\\q3serverlist\\": "src/"
+    }
+  },
+  "scripts": {
+    "check-code": [
+      "\"vendor/bin/phpcs\" -snp --standard=PSR2 --encoding=utf-8 --report-width=150 src/"
+    ]
+  }
+}

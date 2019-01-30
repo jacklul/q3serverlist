@@ -1,70 +1,10 @@
 # Quake 3 Server List Script #
 
-Simple script to fetch all servers from a Quake 3 based master server and then save it to a file for easier parsing. [Example](http://my.jacklul.com/mb2servers) of how it can be used. :)
+Simple library for querying Quake 3 based master servers and it's game servers.
 
-## Requirements
-* php-cli _OR_ decent web hosting
+_For older version check [old](https://github.com/jacklul/q3serverlist/tree/old) branch._
 
-## Usage
-
-Fetch all servers from master server and put addresses of online ones to DB file
-
-CLI:
-```
-$ php q3serverlist.php getservers
-```
-Webspace:
-```
-/q3serverlist.php?action=getservers
-```
-
------------------
-
-Get data from all servers that are present in DB file and write it to list file
-
-CLI:
-```
-$ php q3serverlist.php refreshlist
-```
-Webspace:
-```
-/q3serverlist.php?action=refreshlist
-```
-
------------------
-
-Clean DB from all offline servers or those not meeting filtering criteria
-
-CLI:
-```
-$ php q3serverlist.php cleanup
-```
-Webspace:
-```
-/q3serverlist.php?action=cleanup
-```
-
------------------
-
-Passing external config file in arguments:
-
-CLI:
-```
-$ php q3serverlist.php somedir/config2.php getservers
-```
-Webspace:
-```
-/q3serverlist.php?config=somedir/config2.php&action=getservers
-```
-
------------------
-
-Additionally to secure access to the script on webspace set *$secret* variable to anything that only you will know, then pass it in GET like this:
-```
-/q3serverlist.php?secret=mysecret&action=refreshlist
-```
-
-## Master Server Compatibility
+##### Master Server Compatibility:
 * Quake 3 Arena
 * Enemy Territory
 * Jedi Knight 2
@@ -75,3 +15,43 @@ Additionally to secure access to the script on webspace set *$secret* variable t
 * Call of Duty United Offensive
 
 ... and any other Quake 3 based master server.
+
+## Installation
+
+Install with [Composer](https://github.com/composer/composer):
+
+```bash
+$ composer require jacklul/q3serverlist
+```
+
+## Usage
+
+```php
+use jacklul\q3serverlist\MasterServer;
+use jacklul\q3serverlist\Server;
+
+require(__DIR__ . '/vendor/autoload.php');
+
+$ms = new MasterServer('master.jkhub.org', 29060, 26);
+$servers = $ms->getServers(); // Second call will always return cached data, same with Server->getInfo and Server->getStatus
+
+// Find first japlus server and print it's status
+foreach($servers as $server) {
+	$info = $server->getInfo();	// 'getinfo' request usually returns mod name/directory
+	
+	if (isset($info['game']) && $info['game'] === 'japlus') {
+		print_r($server->getStatus());
+		break;
+	}
+}
+
+// You can get status/info variables magically like this:
+$server->getMapname();
+
+// To get variables that include '_' in their name use capitalization:
+$server->getSvMaxclients(); // (sv_maxclients)
+```
+
+## License
+
+See [LICENSE](LICENSE).

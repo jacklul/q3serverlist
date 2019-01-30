@@ -1,5 +1,3 @@
-*~
-config.php
-serversdb
-serverlist
-masterserverstate
+/vendor
+/composer.lock
+/test.php
