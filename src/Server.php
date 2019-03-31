@@ -72,7 +72,7 @@ class Server
         }
 
         if (!is_int($timeout)) {
-            throw new \InvalidArgumentException('Protocol must be a NUMBER!');
+            throw new \InvalidArgumentException('Timeout must be a NUMBER!');
         }
 
         if ($socket = fsockopen('udp://' . $this->address, $this->port)) {
@@ -115,7 +115,7 @@ class Server
         }
 
         if (!is_int($timeout)) {
-            throw new \InvalidArgumentException('Protocol must be a NUMBER!');
+            throw new \InvalidArgumentException('Timeout must be a NUMBER!');
         }
 
         if ($socket = fsockopen('udp://' . $this->address, $this->port)) {
