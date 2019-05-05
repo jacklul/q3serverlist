@@ -10,6 +10,8 @@
 
 namespace jacklul\q3serverlist;
 
+use InvalidArgumentException;
+
 /**
  * This class represents single server
  *
@@ -49,11 +51,11 @@ class Server
     public function __construct($address, $port)
     {
         if (!is_string($address)) {
-            throw new \InvalidArgumentException('Address must be a STRING!');
+            throw new InvalidArgumentException('Address must be a STRING!');
         }
 
         if (!is_int($port)) {
-            throw new \InvalidArgumentException('Port must be a NUMBER!');
+            throw new InvalidArgumentException('Port must be a NUMBER!');
         }
 
         $this->address = $address;
@@ -72,11 +74,11 @@ class Server
         }
 
         if (!is_int($timeout)) {
-            throw new \InvalidArgumentException('Timeout must be a NUMBER!');
+            throw new InvalidArgumentException('Timeout must be a NUMBER!');
         }
 
         if ($socket = fsockopen('udp://' . $this->address, $this->port)) {
-            socket_set_timeout($socket, $timeout);
+            stream_set_timeout($socket, $timeout);
             fwrite($socket, str_repeat(chr(255), 4) . 'getinfo' . "\n");
             $data = fread($socket, 10000);
             fclose($socket);
@@ -87,7 +89,7 @@ class Server
                 if (isset($vars[1])) {
                     $ret = explode("\\", substr($vars[1], 1, strlen($vars[1])));
                     
-                    for ($i = 0; $i <= count($ret); $i = $i + 2) {
+                    for ($i = 0, $iMax = count($ret); $i <= $iMax; $i += 2) {
                         $list[strtolower(@$ret[$i])] = @$ret[$i + 1];
                     }
                     array_pop($list);
@@ -115,11 +117,11 @@ class Server
         }
 
         if (!is_int($timeout)) {
-            throw new \InvalidArgumentException('Timeout must be a NUMBER!');
+            throw new InvalidArgumentException('Timeout must be a NUMBER!');
         }
 
         if ($socket = fsockopen('udp://' . $this->address, $this->port)) {
-            socket_set_timeout($socket, $timeout);
+            stream_set_timeout($socket, $timeout);
             fwrite($socket, str_repeat(chr(255), 4) . 'getstatus' . "\n");
             $data = fread($socket, 10000);
             fclose($socket);
@@ -130,7 +132,7 @@ class Server
                 if (isset($vars[1])) {
                     $ret = explode("\\", substr($vars[1], 1, strlen($vars[1])));
                     
-                    for ($i = 0; $i <= count($ret); $i = $i + 2) {
+                    for ($i = 0, $iMax = count($ret); $i <= $iMax; $i += 2) {
                         $list[strtolower(@$ret[$i])] = @$ret[$i + 1];
                     }
                     array_pop($list);
@@ -139,10 +141,10 @@ class Server
                     $list['port'] = $this->port;
 
                     $players = array();
-                    for ($i = 2; $i < sizeof($vars); $i++) {
+                    for ($i = 2, $iMax = sizeof($vars); $i < $iMax; $i++) {
                         $infos = explode(' ', $vars[$i], 3);
                         
-                        $name = "";
+                        $name = '';
                         if (isset($infos[2])) {
                             $name = explode('"', $infos[2]);
                             
@@ -160,8 +162,8 @@ class Server
                         if (isset($infos[1])) {
                             $ping = $infos[1];
                         }
-                        
-                        array_push($players, array('score' => $score, 'ping' => $ping, 'name' => $name));
+
+                        $players[] = ['score' => $score, 'ping' => $ping, 'name' => $name];
                     }
                     
                     array_pop($players);
@@ -173,8 +175,8 @@ class Server
                     }
                         
                     $list['numbots'] = 0;
-                    for ($i = 0; $i < sizeof($players); $i++) {
-                        if ($players[$i]['ping'] == 0) {
+                    for ($i = 0, $iMax = sizeof($players); $i < $iMax; $i++) {
+                        if ($players[$i]['ping'] === 0) {
                             $list['numbots']++;
                         }
                     }

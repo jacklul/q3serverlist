@@ -29,9 +29,13 @@ trait MagicGetterTrait
         if ($action === 'get') {
             if (isset($this->$property) && $this->$property !== null) {
                 return $this->$property;
-            } elseif (isset($this->status[$property])) {
+            }
+
+            if (isset($this->status[$property])) {
                 return $this->status[$property];
-            } elseif (isset($this->info[$property])) {
+            }
+
+            if (isset($this->info[$property])) {
                 return $this->info[$property];
             }
         }

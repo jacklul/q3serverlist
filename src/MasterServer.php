@@ -10,6 +10,8 @@
 
 namespace jacklul\q3serverlist;
 
+use InvalidArgumentException;
+
 /**
  * This class represents single master server
  *
@@ -49,15 +51,15 @@ class MasterServer
     public function __construct($address, $port, $protocol)
     {
         if (!is_string($address)) {
-            throw new \InvalidArgumentException('Address must be a STRING!');
+            throw new InvalidArgumentException('Address must be a STRING!');
         }
 
         if (!is_int($port)) {
-            throw new \InvalidArgumentException('Port must be a NUMBER!');
+            throw new InvalidArgumentException('Port must be a NUMBER!');
         }
 
         if (!is_int($protocol)) {
-            throw new \InvalidArgumentException('Protocol must be a NUMBER!');
+            throw new InvalidArgumentException('Protocol must be a NUMBER!');
         }
 
         $this->address = $address;
@@ -71,18 +73,18 @@ class MasterServer
      *
      * @return array|bool
      */
-    public function getServers($keywords = "empty full", $timeout = 1)
+    public function getServers($keywords = 'empty full', $timeout = 1)
     {
         if (!empty($this->servers)) {
             return $this->servers;
         }
 
-        if (!is_string($keywords)) {
-            throw new \InvalidArgumentException('Keywords must be a STRING!');
+        if (!is_string($keywords) && $keywords !== null) {
+            throw new InvalidArgumentException('Keywords must be a STRING!');
         }
 
         if (!is_int($timeout)) {
-            throw new \InvalidArgumentException('Timeout must be a NUMBER!');
+            throw new InvalidArgumentException('Timeout must be a NUMBER!');
         }
 
         if ($socket = fsockopen('udp://' . $this->address, $this->port)) {
@@ -92,18 +94,18 @@ class MasterServer
             fwrite($socket, str_repeat(chr(255), 4) . 'getservers ' . $this->protocol . ' ' . $keywords . "\n");
             
             $time = time() + $timeout;
-            $returned = "";
+            $returned = '';
             while ($time > time()) {
                 $returned .= fgets($socket);
             }
             
             $servers = array();
             for ($i = 0; $i < (strlen($returned) - 10); $i++) {
-                if ($returned[$i] == "\\" && $returned[$i+7] == "\\") {
-                    $ip = ord($returned[$i+1]) . "." . ord($returned[$i+2]) . "." . ord($returned[$i+3]) . "." . ord($returned[$i+4]);
+                if ($returned[$i] === "\\" && $returned[$i+7] === "\\") {
+                    $ip = ord($returned[$i+1]) . '.' . ord($returned[$i+2]) . '.' . ord($returned[$i+3]) . '.' . ord($returned[$i+4]);
                     $port = (ord($returned[$i+5])<<8) + ord($returned[$i+6]);
 
-                    array_push($servers, new Server($ip, $port));
+                    $servers[] = new Server($ip, $port);
                 }
             }
             
