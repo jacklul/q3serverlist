@@ -97,6 +97,10 @@ class MasterServer
             $returned = '';
             while ($time > time()) {
                 $returned .= fgets($socket);
+		
+                if (strpos(substr($returned, -10), 'EOT') !== false) {
+					break;
+				}
             }
             
             $servers = array();
