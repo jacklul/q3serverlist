@@ -64,10 +64,11 @@ class Server
 
     /**
      * @param int $timeout
+     * @param int $length
      *
      * @return array|bool
      */
-    public function getInfo($timeout = 1)
+    public function getInfo($timeout = 1, $length = 10000)
     {
         if (!empty($this->info)) {
             return $this->info;
@@ -80,7 +81,7 @@ class Server
         if ($socket = fsockopen('udp://' . $this->address, $this->port)) {
             stream_set_timeout($socket, $timeout);
             fwrite($socket, str_repeat(chr(255), 4) . 'getinfo' . "\n");
-            $data = fread($socket, 10000);
+            $data = fread($socket, $length);
             fclose($socket);
             
             if ($data) {
@@ -107,10 +108,11 @@ class Server
 
     /**
      * @param int $timeout
+     * @param int $length
      *
      * @return array|bool
      */
-    public function getStatus($timeout = 1)
+    public function getStatus($timeout = 1, $length = 10000)
     {
         if (!empty($this->status)) {
             return $this->status;
@@ -123,7 +125,7 @@ class Server
         if ($socket = fsockopen('udp://' . $this->address, $this->port)) {
             stream_set_timeout($socket, $timeout);
             fwrite($socket, str_repeat(chr(255), 4) . 'getstatus' . "\n");
-            $data = fread($socket, 10000);
+            $data = fread($socket, $length);
             fclose($socket);
             
             if ($data) {
