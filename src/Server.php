@@ -68,7 +68,7 @@ class Server
      *
      * @return array|bool
      */
-    public function getInfo($timeout = 1, $length = 10000)
+    public function getInfo($timeout = 1, $length = 1000000)
     {
         if (!empty($this->info)) {
             return $this->info;
@@ -76,6 +76,10 @@ class Server
 
         if (!is_int($timeout)) {
             throw new InvalidArgumentException('Timeout must be a NUMBER!');
+        }
+
+        if (!is_int($length)) {
+            throw new InvalidArgumentException('Length must be a NUMBER!');
         }
 
         if ($socket = fsockopen('udp://' . $this->address, $this->port)) {
@@ -88,15 +92,17 @@ class Server
                 $vars = explode("\n", $data);
 
                 if (isset($vars[1])) {
+                    $list['address'] = $this->address;
+                    $list['port']    = $this->port;
+
                     $ret = explode("\\", substr($vars[1], 1, strlen($vars[1])));
 
                     for ($i = 0, $iMax = count($ret); $i <= $iMax; $i += 2) {
-                        $list[strtolower(@$ret[$i])] = @$ret[$i + 1];
+                        if (isset($ret[$i], $ret[$i + 1])) {
+                            $list[strtolower($ret[$i])] = $ret[$i + 1];
+                        }
                     }
                     array_pop($list);
-
-                    $list['address'] = $this->address;
-                    $list['port']    = $this->port;
 
                     return $this->info = $list;
                 }
@@ -107,19 +113,64 @@ class Server
     }
 
     /**
+     * @param array $data
+     * 
+     * @return array
+     */
+    private function parsePlayersData($data)
+    {
+        $players = [];
+
+        for ($i = 2, $iMax = sizeof($data); $i < $iMax; $i++) {
+            $infos = explode(' ', $data[$i], 3);
+
+            $name = '';
+            if (isset($infos[2])) {
+                $name = explode('"', $infos[2]);
+
+                if (isset($name[1])) {
+                    $name = $name[1];
+                }
+            }
+
+            $score = 0;
+            if (isset($infos[0])) {
+                $score = $infos[0];
+            }
+
+            $ping = 999;
+            if (isset($infos[1])) {
+                $ping = $infos[1];
+            }
+
+            $players[] = [
+                'score' => $score,
+                'ping'  => $ping,
+                'name'  => $name,
+            ];
+        }
+
+        return $players;
+    }
+
+    /**
      * @param int $timeout
      * @param int $length
      *
      * @return array|bool
      */
-    public function getStatus($timeout = 1, $length = 10000)
+    public function getStatus($timeout = 1, $length = 1000000)
     {
         if (!empty($this->status)) {
             return $this->status;
         }
 
-        if (!is_int($timeout)) {
+        if (!is_numeric($timeout)) {
             throw new InvalidArgumentException('Timeout must be a NUMBER!');
+        }
+
+        if (!is_numeric($length)) {
+            throw new InvalidArgumentException('Length must be a NUMBER!');
         }
 
         if ($socket = fsockopen('udp://' . $this->address, $this->port)) {
@@ -132,43 +183,21 @@ class Server
                 $vars = explode("\n", $data);
 
                 if (isset($vars[1])) {
-                    $ret = explode("\\", substr($vars[1], 1, strlen($vars[1])));
-
-                    for ($i = 0, $iMax = count($ret); $i <= $iMax; $i += 2) {
-                        $list[strtolower(@$ret[$i])] = @$ret[$i + 1];
-                    }
-                    array_pop($list);
-
                     $list['address'] = $this->address;
                     $list['port']    = $this->port;
 
-                    $players = array();
-                    for ($i = 2, $iMax = sizeof($vars); $i < $iMax; $i++) {
-                        $infos = explode(' ', $vars[$i], 3);
+                    $ret = explode("\\", substr($vars[1], 1, strlen($vars[1])));
 
-                        $name = '';
-                        if (isset($infos[2])) {
-                            $name = explode('"', $infos[2]);
-
-                            if (isset($name[1])) {
-                                $name = $name[1];
-                            }
+                    for ($i = 0, $iMax = count($ret); $i <= $iMax; $i += 2) {
+                        if (isset($ret[$i], $ret[$i + 1])) {
+                            $list[strtolower($ret[$i])] = $ret[$i + 1];
                         }
-
-                        $score = 0;
-                        if (isset($infos[0])) {
-                            $score = $infos[0];
-                        }
-
-                        $ping = 999;
-                        if (isset($infos[1])) {
-                            $ping = $infos[1];
-                        }
-
-                        $players[] = ['score' => $score, 'ping' => $ping, 'name' => $name];
                     }
+                    array_pop($list);
 
+                    $players = $this->parsePlayersData($vars);
                     array_pop($players);
+                    
                     $list['players'] = $players;
 
                     $list['numplayers'] = 0;

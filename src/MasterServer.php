@@ -68,6 +68,27 @@ class MasterServer
     }
 
     /**
+     * @param string $data
+     * 
+     * @return array|null
+     */
+    private function parseData($data)
+    {
+        $servers = [];
+
+        for ($i = 0; $i < (strlen($data) - 10); $i++) {
+            if ($data[$i] === "\\" && $data[$i + 7] === "\\") {
+                $ip   = ord($data[$i + 1]) . '.' . ord($data[$i + 2]) . '.' . ord($data[$i + 3]) . '.' . ord($data[$i + 4]);
+                $port = (ord($data[$i + 5]) << 8) + ord($data[$i + 6]);
+
+                $servers[] = new Server($ip, $port);
+            }
+        }
+
+        return $servers;
+    }
+
+    /**
      * @param string $keywords
      * @param int    $timeout
      *
@@ -88,32 +109,20 @@ class MasterServer
         }
 
         if ($socket = fsockopen('udp://' . $this->address, $this->port)) {
-            stream_set_blocking($socket, false);
             stream_set_timeout($socket, $timeout);
-
             fwrite($socket, str_repeat(chr(255), 4) . 'getservers ' . $this->protocol . ' ' . $keywords . "\n");
 
-            $time     = time() + $timeout;
-            $returned = '';
-            while ($time > time()) {
-                $returned .= fgets($socket);
+            $data = '';
+            while (!feof($socket)) {
+                $data .= fgets($socket);
 
-                if (strpos(substr($returned, -10), 'EOT') !== false) {
+                $meta = stream_get_meta_data($socket);
+                if (isset($meta['unread_bytes']) && $meta['unread_bytes'] === 0) {
                     break;
                 }
             }
 
-            $servers = array();
-            for ($i = 0; $i < (strlen($returned) - 10); $i++) {
-                if ($returned[$i] === "\\" && $returned[$i + 7] === "\\") {
-                    $ip   = ord($returned[$i + 1]) . '.' . ord($returned[$i + 2]) . '.' . ord($returned[$i + 3]) . '.' . ord($returned[$i + 4]);
-                    $port = (ord($returned[$i + 5]) << 8) + ord($returned[$i + 6]);
-
-                    $servers[] = new Server($ip, $port);
-                }
-            }
-
-            return $this->servers = $servers;
+            return $this->servers = $this->parseData($data);
         }
 
         return false;
