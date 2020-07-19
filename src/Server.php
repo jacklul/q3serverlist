@@ -59,7 +59,7 @@ class Server
         }
 
         $this->address = $address;
-        $this->port = $port;
+        $this->port    = $port;
     }
 
     /**
@@ -83,26 +83,26 @@ class Server
             fwrite($socket, str_repeat(chr(255), 4) . 'getinfo' . "\n");
             $data = fread($socket, $length);
             fclose($socket);
-            
+
             if ($data) {
                 $vars = explode("\n", $data);
-                
+
                 if (isset($vars[1])) {
                     $ret = explode("\\", substr($vars[1], 1, strlen($vars[1])));
-                    
+
                     for ($i = 0, $iMax = count($ret); $i <= $iMax; $i += 2) {
                         $list[strtolower(@$ret[$i])] = @$ret[$i + 1];
                     }
                     array_pop($list);
-                    
+
                     $list['address'] = $this->address;
-                    $list['port'] = $this->port;
+                    $list['port']    = $this->port;
 
                     return $this->info = $list;
                 }
             }
         }
-        
+
         return false;
     }
 
@@ -127,39 +127,39 @@ class Server
             fwrite($socket, str_repeat(chr(255), 4) . 'getstatus' . "\n");
             $data = fread($socket, $length);
             fclose($socket);
-            
+
             if ($data) {
                 $vars = explode("\n", $data);
-                
+
                 if (isset($vars[1])) {
                     $ret = explode("\\", substr($vars[1], 1, strlen($vars[1])));
-                    
+
                     for ($i = 0, $iMax = count($ret); $i <= $iMax; $i += 2) {
                         $list[strtolower(@$ret[$i])] = @$ret[$i + 1];
                     }
                     array_pop($list);
-                    
+
                     $list['address'] = $this->address;
-                    $list['port'] = $this->port;
+                    $list['port']    = $this->port;
 
                     $players = array();
                     for ($i = 2, $iMax = sizeof($vars); $i < $iMax; $i++) {
                         $infos = explode(' ', $vars[$i], 3);
-                        
+
                         $name = '';
                         if (isset($infos[2])) {
                             $name = explode('"', $infos[2]);
-                            
+
                             if (isset($name[1])) {
                                 $name = $name[1];
                             }
                         }
-                            
+
                         $score = 0;
                         if (isset($infos[0])) {
                             $score = $infos[0];
                         }
-                            
+
                         $ping = 999;
                         if (isset($infos[1])) {
                             $ping = $infos[1];
@@ -167,7 +167,7 @@ class Server
 
                         $players[] = ['score' => $score, 'ping' => $ping, 'name' => $name];
                     }
-                    
+
                     array_pop($players);
                     $list['players'] = $players;
 
@@ -175,19 +175,19 @@ class Server
                     if (isset($players[0]['ping'])) {
                         $list['numplayers'] = sizeof($players);
                     }
-                        
+
                     $list['numbots'] = 0;
                     for ($i = 0, $iMax = sizeof($players); $i < $iMax; $i++) {
                         if ($players[$i]['ping'] === 0) {
                             $list['numbots']++;
                         }
                     }
-                    
+
                     return $this->status = $list;
                 }
             }
         }
-        
+
         return false;
     }
 }

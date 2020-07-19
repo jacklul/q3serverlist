@@ -62,8 +62,8 @@ class MasterServer
             throw new InvalidArgumentException('Protocol must be a NUMBER!');
         }
 
-        $this->address = $address;
-        $this->port = $port;
+        $this->address  = $address;
+        $this->port     = $port;
         $this->protocol = $protocol;
     }
 
@@ -88,34 +88,34 @@ class MasterServer
         }
 
         if ($socket = fsockopen('udp://' . $this->address, $this->port)) {
-            stream_set_blocking($socket, 0);
+            stream_set_blocking($socket, false);
             stream_set_timeout($socket, $timeout);
-            
+
             fwrite($socket, str_repeat(chr(255), 4) . 'getservers ' . $this->protocol . ' ' . $keywords . "\n");
-            
-            $time = time() + $timeout;
+
+            $time     = time() + $timeout;
             $returned = '';
             while ($time > time()) {
                 $returned .= fgets($socket);
-		
+
                 if (strpos(substr($returned, -10), 'EOT') !== false) {
-					break;
-				}
+                    break;
+                }
             }
-            
+
             $servers = array();
             for ($i = 0; $i < (strlen($returned) - 10); $i++) {
-                if ($returned[$i] === "\\" && $returned[$i+7] === "\\") {
-                    $ip = ord($returned[$i+1]) . '.' . ord($returned[$i+2]) . '.' . ord($returned[$i+3]) . '.' . ord($returned[$i+4]);
-                    $port = (ord($returned[$i+5])<<8) + ord($returned[$i+6]);
+                if ($returned[$i] === "\\" && $returned[$i + 7] === "\\") {
+                    $ip   = ord($returned[$i + 1]) . '.' . ord($returned[$i + 2]) . '.' . ord($returned[$i + 3]) . '.' . ord($returned[$i + 4]);
+                    $port = (ord($returned[$i + 5]) << 8) + ord($returned[$i + 6]);
 
                     $servers[] = new Server($ip, $port);
                 }
             }
-            
+
             return $this->servers = $servers;
         }
-        
+
         return false;
     }
 }
