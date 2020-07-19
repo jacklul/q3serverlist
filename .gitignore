@@ -1,3 +1,6 @@
 /vendor
 /composer.lock
-/test*.php
+/test*
+/examples/*/servers.json
+/examples/*/composer.lock
+/examples/*/vendor

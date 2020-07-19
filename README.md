@@ -52,6 +52,8 @@ $server->getMapname();
 $server->getSvMaxclients(); // (sv_maxclients)
 ```
 
+More examples available in [examples](/examples) directory.
+
 ## License
 
 See [LICENSE](LICENSE).

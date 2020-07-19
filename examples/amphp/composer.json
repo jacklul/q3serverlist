@@ -1,0 +1,9 @@
+{
+    "require": {
+        "amphp/parallel": "^1.4",
+        "jacklul/q3serverlist": "^1.1"
+    },
+    "autoload": {
+        "files": ["functions.php"]
+    }
+}

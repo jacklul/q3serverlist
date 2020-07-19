@@ -1,0 +1,6 @@
+{
+    "require": {
+        "jacklul/q3serverlist": "^1.1",
+        "spatie/async": "^1.4"
+    }
+}
