@@ -38,7 +38,7 @@ $servers = $ms->getServers(); // Second call will always return cached data, sam
 
 /** @var Server $server */
 foreach ($servers as $server) { 
-	$info = $server->getInfo();	// 'getinfo' request usually returns mod name/directory
+	$info = $server->getInfo();	// 'getinfo' request usually returns map name
 	
 	// Find first server with map 'q3dm17' (The Longest Yard) and print it's status
 	if (isset($info['mapname']) && $info['mapname'] === 'q3dm17') {
