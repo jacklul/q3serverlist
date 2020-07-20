@@ -24,35 +24,35 @@ class Server
 
     /**
      * Server IP/hostname
-     * 
+     *
      * @var string
      */
     protected $address;
 
     /**
      * Server port
-     * 
+     *
      * @var int
      */
     protected $port;
 
     /**
      * Connection object
-     * 
+     *
      * @var Connection
      */
     protected $connection;
 
     /**
      * Data from getinfo query
-     * 
+     *
      * @var array
      */
     protected $info = [];
 
     /**
      * Data from getstatus query
-     * 
+     *
      * @var array
      */
     protected $status = [];
@@ -68,11 +68,11 @@ class Server
     public function __construct($address, $port)
     {
         if (!is_string($address)) {
-            throw new InvalidArgumentException('Address must be a STRING!');
+            throw new InvalidArgumentException('Address must be a STRING');
         }
 
         if (!is_int($port)) {
-            throw new InvalidArgumentException('Port must be a NUMBER!');
+            throw new InvalidArgumentException('Port must be a NUMBER');
         }
 
         $this->address    = $address;
@@ -103,7 +103,7 @@ class Server
     {
         $this->connection->setTimeout($timeout);
 
-        if ($this->connection->connect() && $this->connection->write($data)) {
+        if ($this->connection->write($data)) {
             return $this->connection->read($length);
         }
 
@@ -112,7 +112,7 @@ class Server
 
     /**
      * Send getinfo query to the server
-     * 
+     *
      * @param int $timeout
      * @param int $length
      *
@@ -149,7 +149,7 @@ class Server
 
     /**
      * Parse players data in the array
-     * 
+     *
      * @param array $data
      *
      * @return array
@@ -192,7 +192,7 @@ class Server
 
     /**
      * Send getstatus query to the server
-     * 
+     *
      * @param int $timeout
      * @param int $length
      *

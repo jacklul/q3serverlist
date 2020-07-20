@@ -1,5 +1,7 @@
 {
-    "require": {
-        "jacklul/q3serverlist": "^1.0"
+    "autoload": {
+        "psr-4": {
+            "jacklul\\q3serverlist\\": "../../src"
+        }
     }
 }

@@ -1,6 +1,10 @@
 {
     "require": {
-        "spatie/async": "^1.4",
-        "jacklul/q3serverlist": "^1.0"
+        "spatie/async": "^1.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "jacklul\\q3serverlist\\": "../../src"
+        }
     }
 }

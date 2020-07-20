@@ -14,18 +14,25 @@ if (!ZEND_THREAD_SAFE) {
     exit('Thread safety is required' . PHP_EOL);
 }
 
-require __DIR__ . '/vendor/autoload.php';
+if (file_exists(__DIR__ . '/vendor/autoload.php')) {
+    require __DIR__ . '/vendor/autoload.php';
+} elseif (file_exists(__DIR__ . '/../../vendor/autoload.php')) {
+    require __DIR__ . '/../../vendor/autoload.php';
+}
+
 $start = microtime(true);
 
 class ServerScan extends Thread
 {
     private $server;
+    private $connection;
     private $print;
     public $result;
 
     public function __construct(Server $server, $print = false)
     {
         $this->server = $server;
+        $this->connection = $server->getConnection();
         $this->print  = $print;
     }
 
@@ -78,6 +85,8 @@ class ServerScan extends Thread
                 print $this->server->getAddress() . ':' . $this->server->getPort() . PHP_EOL;
             }
         }
+
+        $this->server->getConnection()->close();
     }
 }
 

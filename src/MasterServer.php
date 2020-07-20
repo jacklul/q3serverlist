@@ -25,35 +25,35 @@ class MasterServer
 
     /**
      * Server IP/hostname
-     * 
+     *
      * @var string
      */
     protected $address;
 
     /**
      * Server port
-     * 
+     *
      * @var int
      */
     protected $port;
 
     /**
      * Connection object
-     * 
+     *
      * @var Connection
      */
     protected $connection;
 
     /**
      * Protocol version number
-     * 
+     *
      * @var int
      */
     protected $protocol;
 
     /**
      * Server list as array of Server objects
-     * 
+     *
      * @var Server[]
      */
     protected $servers = [];
@@ -70,15 +70,15 @@ class MasterServer
     public function __construct($address, $port, $protocol)
     {
         if (!is_string($address)) {
-            throw new InvalidArgumentException('Address must be a STRING!');
+            throw new InvalidArgumentException('Address must be a STRING');
         }
 
         if (!is_int($port)) {
-            throw new InvalidArgumentException('Port must be a NUMBER!');
+            throw new InvalidArgumentException('Port must be a NUMBER');
         }
 
         if (!is_int($protocol)) {
-            throw new InvalidArgumentException('Protocol must be a NUMBER!');
+            throw new InvalidArgumentException('Protocol must be a NUMBER');
         }
 
         $this->address    = $address;
@@ -99,7 +99,7 @@ class MasterServer
 
     /**
      * Parse returned data
-     * 
+     *
      * @param string $data
      *
      * @return array|null
@@ -126,7 +126,7 @@ class MasterServer
 
     /**
      * Send getservers query to the server
-     * 
+     *
      * @param string $keywords
      * @param int    $timeout
      * @param int    $length
@@ -141,12 +141,12 @@ class MasterServer
         }
 
         if (!is_string($keywords) && $keywords !== null) {
-            throw new InvalidArgumentException('Keywords must be a STRING!');
+            throw new InvalidArgumentException('Keywords must be a STRING');
         }
 
         $this->connection->setTimeout($timeout);
 
-        if ($this->connection->connect() && $this->connection->write(str_repeat(chr(255), 4) . 'getservers ' . $this->protocol . ' ' . $keywords . "\n")) {
+        if ($this->connection->write(str_repeat(chr(255), 4) . 'getservers ' . $this->protocol . ' ' . $keywords . "\n")) {
             return $this->servers = $this->parseData($this->connection->read($length));
         }
 

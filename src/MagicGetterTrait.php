@@ -17,7 +17,7 @@ trait MagicGetterTrait
 {
     /**
      * This magically fetches object properties
-     * 
+     *
      * @param $method
      * @param $args
      *
@@ -26,8 +26,8 @@ trait MagicGetterTrait
     public function __call($method, $args)
     {
         $property = strtolower(ltrim(preg_replace('/[A-Z]/', '_$0', substr($method, 3)), '_'));
-        $action = substr($method, 0, 3);
-        
+        $action   = substr($method, 0, 3);
+
         if ($action === 'get') {
             if (isset($this->$property) && $this->$property !== null) {
                 return $this->$property;
@@ -41,7 +41,7 @@ trait MagicGetterTrait
                 return $this->info[$property];
             }
         }
-        
+
         return null;
     }
 }

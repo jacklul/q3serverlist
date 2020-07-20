@@ -10,7 +10,12 @@ use jacklul\q3serverlist\MasterServer;
 use jacklul\q3serverlist\Server;
 use Spatie\Async\Pool;
 
-require __DIR__ . '/vendor/autoload.php';
+if (file_exists(__DIR__ . '/vendor/autoload.php')) {
+    require __DIR__ . '/vendor/autoload.php';
+} elseif (file_exists(__DIR__ . '/../../vendor/autoload.php')) {
+    require __DIR__ . '/../../vendor/autoload.php';
+}
+
 $start = microtime(true);
 
 function scanServer(Server $server, $print = false): ?array

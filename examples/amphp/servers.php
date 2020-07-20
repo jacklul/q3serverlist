@@ -8,7 +8,7 @@
  * and pthreads extension
  * 
  * This is the fastest and most reliable way of scanning
- * the masters server in with multiple threads.
+ * the masters server with multiple threads
  */
 
 use Amp\Parallel\Worker;
@@ -20,7 +20,12 @@ if (!ZEND_THREAD_SAFE) {
     exit('Thread safety is required' . PHP_EOL);
 }
 
-require __DIR__ . '/vendor/autoload.php';
+if (file_exists(__DIR__ . '/vendor/autoload.php')) {
+    require __DIR__ . '/vendor/autoload.php';
+} elseif (file_exists(__DIR__ . '/../../vendor/autoload.php')) {
+    require __DIR__ . '/../../vendor/autoload.php';
+}
+
 $start = microtime(true);
 
 // Fetch the server list

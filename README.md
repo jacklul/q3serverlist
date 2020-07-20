@@ -1,9 +1,9 @@
-# Quake 3 Server List Script #
+# Quake 3 Server List
 
 Simple library for querying Quake 3 based master servers and it's game servers.
 
 - Version `1.x.x` uses `fsockopen`
-- Version `2.x.x` uses `socket_*` functions
+- Version `2.x.x` uses `sockets` extension
 
 _For legacy version check [old](https://github.com/jacklul/q3serverlist/tree/old) branch._
 
