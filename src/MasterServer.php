@@ -24,29 +24,48 @@ class MasterServer
     use MagicGetterTrait;
 
     /**
+     * Server IP/hostname
+     * 
      * @var string
      */
-    private $address;
+    protected $address;
 
     /**
+     * Server port
+     * 
      * @var int
      */
-    private $port;
+    protected $port;
 
     /**
+     * Connection object
+     * 
+     * @var Connection
+     */
+    protected $connection;
+
+    /**
+     * Protocol version number
+     * 
      * @var int
      */
-    private $protocol;
+    protected $protocol;
 
     /**
+     * Server list as array of Server objects
+     * 
      * @var Server[]
      */
-    private $servers = [];
+    protected $servers = [];
 
     /**
+     * Initialize class and Connection object
+     *
      * @param string $address
      * @param int    $port
      * @param int    $protocol
+     *
+     * @throws InvalidArgumentException
      */
     public function __construct($address, $port, $protocol)
     {
@@ -62,14 +81,27 @@ class MasterServer
             throw new InvalidArgumentException('Protocol must be a NUMBER!');
         }
 
-        $this->address  = $address;
-        $this->port     = $port;
-        $this->protocol = $protocol;
+        $this->address    = $address;
+        $this->port       = $port;
+        $this->protocol   = $protocol;
+        $this->connection = new Connection($address, $port);
     }
 
     /**
-     * @param string $data
+     * Return Connection object
+     *
+     * @return Connection
+     */
+    public function getConnection()
+    {
+        return $this->connection;
+    }
+
+    /**
+     * Parse returned data
      * 
+     * @param string $data
+     *
      * @return array|null
      */
     private function parseData($data)
@@ -81,6 +113,10 @@ class MasterServer
                 $ip   = ord($data[$i + 1]) . '.' . ord($data[$i + 2]) . '.' . ord($data[$i + 3]) . '.' . ord($data[$i + 4]);
                 $port = (ord($data[$i + 5]) << 8) + ord($data[$i + 6]);
 
+                if ($ip === '0.0.0.0' || $port === '0') {
+                    continue;
+                }
+
                 $servers[] = new Server($ip, $port);
             }
         }
@@ -89,12 +125,16 @@ class MasterServer
     }
 
     /**
+     * Send getservers query to the server
+     * 
      * @param string $keywords
      * @param int    $timeout
+     * @param int    $length
      *
      * @return array|bool
+     * @throws InvalidArgumentException
      */
-    public function getServers($keywords = 'empty full', $timeout = 1)
+    public function getServers($keywords = 'empty full', $timeout = 1, $length = 1000000)
     {
         if (!empty($this->servers)) {
             return $this->servers;
@@ -104,25 +144,10 @@ class MasterServer
             throw new InvalidArgumentException('Keywords must be a STRING!');
         }
 
-        if (!is_int($timeout)) {
-            throw new InvalidArgumentException('Timeout must be a NUMBER!');
-        }
+        $this->connection->setTimeout($timeout);
 
-        if ($socket = fsockopen('udp://' . $this->address, $this->port)) {
-            stream_set_timeout($socket, $timeout);
-            fwrite($socket, str_repeat(chr(255), 4) . 'getservers ' . $this->protocol . ' ' . $keywords . "\n");
-
-            $data = '';
-            while (!feof($socket)) {
-                $data .= fgets($socket);
-
-                $meta = stream_get_meta_data($socket);
-                if (isset($meta['unread_bytes']) && $meta['unread_bytes'] === 0) {
-                    break;
-                }
-            }
-
-            return $this->servers = $this->parseData($data);
+        if ($this->connection->connect() && $this->connection->write(str_repeat(chr(255), 4) . 'getservers ' . $this->protocol . ' ' . $keywords . "\n")) {
+            return $this->servers = $this->parseData($this->connection->read($length));
         }
 
         return false;

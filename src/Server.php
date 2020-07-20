@@ -17,36 +17,53 @@ use InvalidArgumentException;
  *
  * @method string getAddress()
  * @method int    getPort()
- * @method int    getProtocol()
- * @method array  getPlayers()
  */
 class Server
 {
     use MagicGetterTrait;
 
     /**
+     * Server IP/hostname
+     * 
      * @var string
      */
-    private $address;
+    protected $address;
 
     /**
+     * Server port
+     * 
      * @var int
      */
-    private $port;
+    protected $port;
 
     /**
+     * Connection object
+     * 
+     * @var Connection
+     */
+    protected $connection;
+
+    /**
+     * Data from getinfo query
+     * 
      * @var array
      */
-    private $info = [];
+    protected $info = [];
 
     /**
+     * Data from getstatus query
+     * 
      * @var array
      */
-    private $status = [];
+    protected $status = [];
 
     /**
+     * Initialize class and Connection object
+     *
      * @param string $address
      * @param int    $port
+     *
+     * @throws InvalidArgumentException
      */
     public function __construct($address, $port)
     {
@@ -58,11 +75,44 @@ class Server
             throw new InvalidArgumentException('Port must be a NUMBER!');
         }
 
-        $this->address = $address;
-        $this->port    = $port;
+        $this->address    = $address;
+        $this->port       = $port;
+        $this->connection = new Connection($address, $port);
     }
 
     /**
+     * Return Connection object
+     *
+     * @return Connection
+     */
+    public function getConnection()
+    {
+        return $this->connection;
+    }
+
+    /**
+     * Send query to the server
+     *
+     * @param string $data
+     * @param int    $timeout
+     * @param int    $length
+     *
+     * @return string|bool
+     */
+    public function query($data, $timeout = 1, $length = 1000000)
+    {
+        $this->connection->setTimeout($timeout);
+
+        if ($this->connection->connect() && $this->connection->write($data)) {
+            return $this->connection->read($length);
+        }
+
+        return false;
+    }
+
+    /**
+     * Send getinfo query to the server
+     * 
      * @param int $timeout
      * @param int $length
      *
@@ -74,38 +124,23 @@ class Server
             return $this->info;
         }
 
-        if (!is_int($timeout)) {
-            throw new InvalidArgumentException('Timeout must be a NUMBER!');
-        }
+        if ($data = $this->query(str_repeat(chr(255), 4) . 'getinfo' . "\n", $timeout, $length)) {
+            $vars = explode("\n", $data);
 
-        if (!is_int($length)) {
-            throw new InvalidArgumentException('Length must be a NUMBER!');
-        }
+            if (isset($vars[1])) {
+                $list['address'] = $this->address;
+                $list['port']    = $this->port;
 
-        if ($socket = fsockopen('udp://' . $this->address, $this->port)) {
-            stream_set_timeout($socket, $timeout);
-            fwrite($socket, str_repeat(chr(255), 4) . 'getinfo' . "\n");
-            $data = fread($socket, $length);
-            fclose($socket);
+                $ret = explode("\\", substr($vars[1], 1, strlen($vars[1])));
 
-            if ($data) {
-                $vars = explode("\n", $data);
-
-                if (isset($vars[1])) {
-                    $list['address'] = $this->address;
-                    $list['port']    = $this->port;
-
-                    $ret = explode("\\", substr($vars[1], 1, strlen($vars[1])));
-
-                    for ($i = 0, $iMax = count($ret); $i <= $iMax; $i += 2) {
-                        if (isset($ret[$i], $ret[$i + 1])) {
-                            $list[strtolower($ret[$i])] = $ret[$i + 1];
-                        }
+                for ($i = 0, $iMax = count($ret); $i <= $iMax; $i += 2) {
+                    if (isset($ret[$i], $ret[$i + 1])) {
+                        $list[strtolower($ret[$i])] = $ret[$i + 1];
                     }
-                    array_pop($list);
-
-                    return $this->info = $list;
                 }
+                array_pop($list);
+
+                return $this->info = $list;
             }
         }
 
@@ -113,8 +148,10 @@ class Server
     }
 
     /**
-     * @param array $data
+     * Parse players data in the array
      * 
+     * @param array $data
+     *
      * @return array
      */
     private function parsePlayersData($data)
@@ -154,6 +191,8 @@ class Server
     }
 
     /**
+     * Send getstatus query to the server
+     * 
      * @param int $timeout
      * @param int $length
      *
@@ -165,55 +204,40 @@ class Server
             return $this->status;
         }
 
-        if (!is_numeric($timeout)) {
-            throw new InvalidArgumentException('Timeout must be a NUMBER!');
-        }
+        if ($data = $this->query(str_repeat(chr(255), 4) . 'getstatus' . "\n", $timeout, $length)) {
+            $vars = explode("\n", $data);
 
-        if (!is_numeric($length)) {
-            throw new InvalidArgumentException('Length must be a NUMBER!');
-        }
+            if (isset($vars[1])) {
+                $list['address'] = $this->address;
+                $list['port']    = $this->port;
 
-        if ($socket = fsockopen('udp://' . $this->address, $this->port)) {
-            stream_set_timeout($socket, $timeout);
-            fwrite($socket, str_repeat(chr(255), 4) . 'getstatus' . "\n");
-            $data = fread($socket, $length);
-            fclose($socket);
+                $ret = explode("\\", substr($vars[1], 1, strlen($vars[1])));
 
-            if ($data) {
-                $vars = explode("\n", $data);
-
-                if (isset($vars[1])) {
-                    $list['address'] = $this->address;
-                    $list['port']    = $this->port;
-
-                    $ret = explode("\\", substr($vars[1], 1, strlen($vars[1])));
-
-                    for ($i = 0, $iMax = count($ret); $i <= $iMax; $i += 2) {
-                        if (isset($ret[$i], $ret[$i + 1])) {
-                            $list[strtolower($ret[$i])] = $ret[$i + 1];
-                        }
+                for ($i = 0, $iMax = count($ret); $i <= $iMax; $i += 2) {
+                    if (isset($ret[$i], $ret[$i + 1])) {
+                        $list[strtolower($ret[$i])] = $ret[$i + 1];
                     }
-                    array_pop($list);
-
-                    $players = $this->parsePlayersData($vars);
-                    array_pop($players);
-                    
-                    $list['players'] = $players;
-
-                    $list['numplayers'] = 0;
-                    if (isset($players[0]['ping'])) {
-                        $list['numplayers'] = sizeof($players);
-                    }
-
-                    $list['numbots'] = 0;
-                    for ($i = 0, $iMax = sizeof($players); $i < $iMax; $i++) {
-                        if ($players[$i]['ping'] === 0) {
-                            $list['numbots']++;
-                        }
-                    }
-
-                    return $this->status = $list;
                 }
+                array_pop($list);
+
+                $players = $this->parsePlayersData($vars);
+                array_pop($players);
+
+                $list['players'] = $players;
+
+                $list['numplayers'] = 0;
+                if (isset($players[0]['ping'])) {
+                    $list['numplayers'] = sizeof($players);
+                }
+
+                $list['numbots'] = 0;
+                for ($i = 0, $iMax = sizeof($players); $i < $iMax; $i++) {
+                    if ($players[$i]['ping'] === 0) {
+                        $list['numbots']++;
+                    }
+                }
+
+                return $this->status = $list;
             }
         }
 

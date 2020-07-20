@@ -16,6 +16,8 @@ namespace jacklul\q3serverlist;
 trait MagicGetterTrait
 {
     /**
+     * This magically fetches object properties
+     * 
      * @param $method
      * @param $args
      *
