@@ -21,12 +21,12 @@ if (strpos($argv[1], ':') !== false) {
 
 $server = new Server($argv[1], (int) $argv[2]);
 
-$data = $server->getInfo(2);
+$data = $server->getInfo();
 if ($data) {
     print 'GetInfo: ' . print_r($data, true);
 }
 
-$data = $server->getStatus(2);
+$data = $server->getStatus();
 if ($data) {
     print 'GetStatus: ' . print_r($data, true);
 }

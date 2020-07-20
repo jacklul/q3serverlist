@@ -15,6 +15,7 @@ if (!ZEND_THREAD_SAFE) {
 }
 
 require __DIR__ . '/vendor/autoload.php';
+$start = microtime(true);
 
 class ServerScan extends Thread
 {
@@ -38,48 +39,63 @@ class ServerScan extends Thread
         ];
 
         if ($this->print) {
-            $address = $this->result['info']['address'] ?? $this->result['status']['address'] ?? null;
-            $port    = $this->result['info']['port'] ?? $this->result['status']['port'] ?? null;
+            if (
+                (isset($this->result['status']) && is_array($this->result['status'])) || 
+                (isset($this->result['info']) && is_array($this->result['info']))
+            ) {
+                $address = $this->result['info']['address'] ?? $this->result['status']['address'] ?? null;
+                $port    = $this->result['info']['port'] ?? $this->result['status']['port'] ?? null;
 
-            if (empty($address) || empty($port)) {
-                return;
-            }
-
-            $hostname   = $this->result['info']['hostname'] ?? $this->result['status']['sv_hostname'] ?? '?';
-            $game       = $this->result['info']['game'] ?? $this->result['status']['gamename'] ?? '?';
-            $map        = $this->result['info']['mapname'] ?? $this->result['status']['mapname'] ?? '?';
-            $numPlayers = $this->result['info']['clients'] ?? $this->result['status']['numplayers'] ?? 0;
-            $maxPlayers = $this->result['info']['sv_maxclients'] ?? $this->result['status']['sv_maxclients'] ?? '?';
-
-            $hostname = preg_replace('/\^[0-9]{1}/', '', $hostname); // No color codes
-            $hostname = preg_replace('/\s+/', ' ', $hostname); // No repeated whitespace
-
-            $output[] = trim($hostname);
-            $output[] = $game;
-            $output[] = $map;
-            $output[] = $numPlayers . '/' . $maxPlayers;
-
-            $maxLen = 30;
-            foreach ($output as &$part) {
-                $part = substr($part, 0, $maxLen);
-
-                if (strlen($part) < $maxLen) {
-                    $part .= str_repeat(' ', $maxLen - strlen($part));
+                if (empty($address) || empty($port)) {
+                    return;
                 }
-            }
 
-            print $address . ':' . $port . "\t" . implode("\t\t", $output) . PHP_EOL;
+                $hostname   = $this->result['info']['hostname'] ?? $this->result['status']['sv_hostname'] ?? '?';
+                $game       = $this->result['info']['game'] ?? $this->result['status']['gamename'] ?? '?';
+                $map        = $this->result['info']['mapname'] ?? $this->result['status']['mapname'] ?? '?';
+                $numPlayers = $this->result['info']['clients'] ?? $this->result['status']['numplayers'] ?? 0;
+                $maxPlayers = $this->result['info']['sv_maxclients'] ?? $this->result['status']['sv_maxclients'] ?? '?';
+
+                $hostname = preg_replace('/\^[0-9]{1}/', '', $hostname); // No color codes
+                $hostname = preg_replace('/\s+/', ' ', $hostname); // No repeated whitespace
+
+                $output[] = trim($hostname);
+                $output[] = $game;
+                $output[] = $map;
+                $output[] = $numPlayers . '/' . $maxPlayers;
+
+                $maxLen = 30;
+                foreach ($output as &$part) {
+                    $part = substr($part, 0, $maxLen);
+
+                    if (strlen($part) < $maxLen) {
+                        $part .= str_repeat(' ', $maxLen - strlen($part));
+                    }
+                }
+
+                print $address . ':' . $port . "\t" . implode("\t\t", $output) . PHP_EOL;
+            } else {
+                print $this->server->getAddress() . ':' . $this->server->getPort() . PHP_EOL;
+            }
         }
     }
 }
 
 // Fetch the server list
-$servers = (new MasterServer('master.jkhub.org', 29060, 26))->getServers();
+$servers = (new MasterServer('master.quake3arena.com', 27950, 68))->getServers();
+if (!$servers) {
+    exit;
+}
+
+// Scan only 100 servers
+$serversOriginal = count($servers);
+shuffle($servers);
+$servers = array_splice($servers, 0, 100);
 
 // This does not have to be equal to number of CPUs, needs to be kept reasonable
 // The maximum I observed that was possible is NUMBER_OF_PROCESSORS * 6 (on a 6/12 processor)
 // anything above that doesn't run threads at all
-$threads = getenv('NUMBER_OF_PROCESSORS') ? getenv('NUMBER_OF_PROCESSORS') * 6 : 4;
+$threads = getenv('NUMBER_OF_PROCESSORS') ? getenv('NUMBER_OF_PROCESSORS') : 4;
 
 // Pass number of threads as argument to the script to override
 if (isset($argv[1]) && is_numeric($argv[1])) {
@@ -108,7 +124,14 @@ for ($i = 0, $iMax = count($servers); $i < $iMax; $i++) {
                 isset($stack[$j]) && is_object($stack[$j]) &&
                 ($result = $stack[$j]->result) !== null
             ) {
-                $results[] = (array) $stack[$j]->result;
+                $result = (array) $stack[$j]->result;
+
+                if (
+                    (isset($result['status']) && is_array($result['status'])) || 
+                    (isset($result['info']) && is_array($result['info']))
+                ) {
+                    $results[] = $result;
+                }
             }
         }
 
@@ -117,7 +140,9 @@ for ($i = 0, $iMax = count($servers); $i < $iMax; $i++) {
     }
 }
 
-print 'Servers: ' . count($results) . '/' . count($servers) . PHP_EOL;
+print str_repeat('-', 100) . PHP_EOL;
+print 'Servers: ' . count($results) . '/' . count($servers) . ' (' . $serversOriginal . ')' . PHP_EOL;
+print 'Time: ' . round(microtime(true) - $start, 2) . ' seconds' . PHP_EOL;
 print 'Threads: ' . (count($servers) * $threads) . '/' . $threads . PHP_EOL;
 
 if (!empty($results)) {

@@ -5,6 +5,10 @@
  * to servers.json file as well as prints to console
  * 
  * Utilizes amphp/parallel package (requires thread safety) 
+ * and pthreads extension
+ * 
+ * This is the fastest and most reliable way of scanning
+ * the masters server in with multiple threads.
  */
 
 use Amp\Parallel\Worker;
@@ -17,9 +21,18 @@ if (!ZEND_THREAD_SAFE) {
 }
 
 require __DIR__ . '/vendor/autoload.php';
+$start = microtime(true);
 
 // Fetch the server list
-$servers = (new MasterServer('master.jkhub.org', 29060, 26))->getServers();
+$servers = (new MasterServer('master.quake3arena.com', 27950, 68))->getServers();
+if (!$servers) {
+    exit;
+}
+
+// Scan only 100 servers
+$serversOriginal = count($servers);
+shuffle($servers);
+$servers = array_splice($servers, 0, 100);
 
 // Prepare promises
 $promises = [];
@@ -33,10 +46,17 @@ $responses = Promise\wait(Promise\all($promises));
 // Collect results
 $results = [];
 foreach ($responses as $result) {
-    $results[] = $result;
+    if (
+        (isset($result['status']) && is_array($result['status'])) || 
+        (isset($result['info']) && is_array($result['info']))
+    ) {
+        $results[] = $result;
+    }
 }
 
-print 'Servers: ' . count($results) . '/' . count($servers) . PHP_EOL;
+print str_repeat('-', 100) . PHP_EOL;
+print 'Servers: ' . count($results) . '/' . count($servers) . ' (' . $serversOriginal . ')' . PHP_EOL;
+print 'Time: ' . round(microtime(true) - $start, 2) . ' seconds' . PHP_EOL;
 
 if (!empty($results)) {
     // No need for JSON_PRETTY_PRINT, it's good for debugging purposes only
