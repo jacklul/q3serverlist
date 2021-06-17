@@ -159,6 +159,10 @@ class Server
         $players = [];
 
         for ($i = 2, $iMax = sizeof($data); $i < $iMax; $i++) {
+            if (trim($data[$i]) === '') {
+                continue;
+            }
+
             $infos = explode(' ', $data[$i], 3);
 
             $name = '';
@@ -218,10 +222,8 @@ class Server
                         $list[strtolower($ret[$i])] = $ret[$i + 1];
                     }
                 }
-                array_pop($list);
 
                 $players = $this->parsePlayersData($vars);
-                array_pop($players);
 
                 $list['players'] = $players;
 
@@ -232,7 +234,7 @@ class Server
 
                 $list['numbots'] = 0;
                 for ($i = 0, $iMax = sizeof($players); $i < $iMax; $i++) {
-                    if ($players[$i]['ping'] === 0) {
+                    if ((int) $players[$i]['ping'] === 0) {
                         $list['numbots']++;
                     }
                 }
