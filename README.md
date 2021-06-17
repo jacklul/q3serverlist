@@ -2,7 +2,7 @@
 
 Simple library for querying Quake 3 based master servers and it's game servers.
 
-- Version `1.x.x` uses `fsockopen`
+- Version `1.x.x` uses `fsockopen` (no longer supported)
 - Version `2.x.x` uses `sockets` extension
 
 _For legacy version check [old](https://github.com/jacklul/q3serverlist/tree/old) branch._
