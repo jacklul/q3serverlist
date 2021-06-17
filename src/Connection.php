@@ -193,15 +193,10 @@ class Connection
             throw new InvalidArgumentException('Length must be a NUMBER');
         }
 
-        // https://bugs.php.net/bug.php?id=48326
-        if (!defined('MSG_DONTWAIT')) {
-            define('MSG_DONTWAIT', 0x20);
-        }
-
         $this->buffer = '';
         $len          = 0;
 
-        while ($recvLen = @socket_recv($this->socket, $buffer, $length, MSG_DONTWAIT)) {
+        while ($recvLen = @socket_recv($this->socket, $buffer, $length, 0)) {
             $this->buffer .= $buffer;
             $bufferEnd = substr($buffer, -10);
 
