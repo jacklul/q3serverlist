@@ -108,6 +108,10 @@ class MasterServer
     {
         $servers = [];
 
+        if (empty($data)) {
+            return $servers;
+        }
+
         for ($i = 0; $i < (strlen($data) - 10); $i++) {
             if ($data[$i] === "\\" && $data[$i + 7] === "\\") {
                 $ip   = ord($data[$i + 1]) . '.' . ord($data[$i + 2]) . '.' . ord($data[$i + 3]) . '.' . ord($data[$i + 4]);

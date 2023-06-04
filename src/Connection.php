@@ -12,6 +12,7 @@ namespace jacklul\q3serverlist;
 
 use InvalidArgumentException;
 use RuntimeException;
+use Socket;
 
 /**
  * This class represent single connection
@@ -35,7 +36,7 @@ class Connection
     /**
      * Socket handle
      *
-     * @var resource
+     * @var Socket|resource
      */
     protected $socket;
 
@@ -106,7 +107,7 @@ class Connection
      */
     private function setTimeoutOption($seconds = 1, $microseconds = 0)
     {
-        if (!is_resource($this->socket)) {
+        if (!is_resource($this->socket) && !$this->socket instanceof Socket) {
             throw new RuntimeException('Socket handle is not valid');
         }
 
@@ -132,7 +133,7 @@ class Connection
 
         $this->socket = @socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
 
-        if (!is_resource($this->socket)) {
+        if (!is_resource($this->socket) && !$this->socket instanceof Socket) {
             throw new RuntimeException('Unable to create socket: ' . socket_strerror(socket_last_error()));
         }
 
@@ -252,7 +253,7 @@ class Connection
      */
     public function close()
     {
-        if (is_resource($this->socket)) {
+        if (is_resource($this->socket) || $this->socket instanceof Socket) {
             return @socket_close($this->socket);
         }
 
